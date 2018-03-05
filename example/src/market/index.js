@@ -1,4 +1,4 @@
-/**
+ /**
  * This is the main config object that has pulled together all the sub configs.
  * COmponent level config goes here
  */

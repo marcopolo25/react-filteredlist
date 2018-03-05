@@ -345,7 +345,7 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
     const { config: { selector }, app } = this.props,
       classNames = `dl ${selector}`,
       appBody = Object.keys(app.selectedView).length > 0 ? (this.makeAppBody(app)) : '';//Delay render until config is loaded
-
+      console.log('REACT FILTER HERE!!!!')
     return (
       <div className={classNames} >
         {appBody}

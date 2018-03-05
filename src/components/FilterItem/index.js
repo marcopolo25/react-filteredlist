@@ -6,8 +6,9 @@ import { collections, queries, filters } from '../../utils';
 // import Select from 'react-select';
 import Select from 'react-super-select';
 import moment from 'moment';
-import _ from 'underscore';
-import { DateRangePicker, SingleDatePicker, DayPickerRangeController } from 'react-dates';
+// import _ from 'underscore';
+// import { DateRangePicker, SingleDatePicker, DayPickerRangeController } from 'react-dates';
+import DatePicker from 'react-datepicker';
 
 import { CheckboxGroup, Checkbox } from 'react-checkbox-group';
 import { SortItem } from '../SortItem';
@@ -17,13 +18,29 @@ class FilterItem extends Component { // eslint-disable-line react/prefer-statele
     super(props)
     this.state = {
       focusedInput: null,
-      lastFocusedInput: null
+      lastFocusedInput: null,
+      startDate: moment(),
+      endDate: moment()
     };
 
     this.makeFilter = this.makeFilter.bind(this);
     this.onSelectChange = this.onSelectChange.bind(this);
     this.onSortClick = this.onSortClick.bind(this);
     this.makeSelectInitialValue = this.makeSelectInitialValue.bind(this);
+    this.onRangeChange = this.onRangeChange.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if(nextProps.options.range) {
+      console.log('COMPONENT WILL RECEIVE PROPS: ', nextProps)
+      const dateRange = nextProps.options.range;
+      if(dateRange.start) {
+          this.setState({startDate: moment(dateRange.start * 1)});
+      }
+      if(dateRange.end) {
+          this.setState({endDate: moment(dateRange.end * 1)});
+      }
+    }
   }
 
   onSelectChange(data) {
@@ -60,28 +77,38 @@ class FilterItem extends Component { // eslint-disable-line react/prefer-statele
    * @param startDate
    * @param endDate
    */
-  onRangeChange({ startDate, endDate }) {
-    const { options, selectedView, filterChange } = this.props;
+  onRangeChange(args) {
+    console.log('ON RANGE CHANGE STATE', this.state)
+
+    let startDate = args.startDate || this.state.startDate;
+    let endDate = args.endDate ||  this.state.endDate;
+    const {options, selectedView, filterChange} = this.props;
 
     if (startDate) {
-      let local = moment(startDate.utc()).local();
+	    if (startDate.isAfter(endDate)) {
+		    endDate = startDate;
+	    }
 
-      filterChange({
-        id: `${options.id}--start`,
-        view: selectedView.id,
-        value: local.unix() * 1000
-        //value : parseInt(startDate.unix()+'000',10)
-      });
+        let local = moment(startDate.utc()).local();
+
+        filterChange({
+            id: `${options.id}--start`,
+            view: selectedView.id,
+            value: local.unix() * 1000
+            //value : parseInt(startDate.unix()+'000',10)
+        });
+
+
     }
 
     if (endDate) {
-      let local = moment(endDate.utc()).local();
+        let local = moment(endDate.utc()).local();
 
-      filterChange({
-        id: `${options.id}--end`,
-        view: selectedView.id,
-        value: local.unix() * 1000
-      });
+        filterChange({
+            id: `${options.id}--end`,
+            view: selectedView.id,
+            value: local.unix() * 1000
+        });
     }
   }
 
@@ -142,15 +169,34 @@ class FilterItem extends Component { // eslint-disable-line react/prefer-statele
       case 'range':
         return [
           (<span key={Math.random() * 100000} className="dl__filterItemRangeClear"><a href="#" onClick={self.onRangeReset.bind(self)}>reset</a></span>),
-          (<DateRangePicker
-            key={Math.random() * 100000}
-            startDate={options.range.start ? moment(options.range.start * 1) : moment()} // .momentObj or null,
-            endDate={options.range.end ? moment(options.range.end * 1) : moment()} // .momentObj or null,
-            onDatesChange={self.onRangeChange.bind(self)} // .func.isRequired,
-            focusedInput={self.state.focusedInput} // .oneOf([START_DATE, END_DATE]) or null,
-            onFocusChange={self.onRangeFocusChange.bind(self)} // .func.isRequired,
-            isOutsideRange={() => false}
-          />)];
+            (<div className="dr__wrapper">
+              <DatePicker
+                className="dr__datePicker"
+                selected={this.state.startDate}
+                selectsStart
+                startDate={this.state.startDate}
+                endDate={this.state.endDate}
+                onChange={startDate => {
+	                console.log('start date picker', startDate);
+                    self.setState({startDate});
+	                self.onRangeChange({startDate});
+                }}
+            />
+              <div className="dr__divider">
+                <svg viewBox="0 0 1000 1000"><path d="M694.4 242.4l249.1 249.1c11 11 11 21 0 32L694.4 772.7c-5 5-10 7-16 7s-11-2-16-7c-11-11-11-21 0-32l210.1-210.1H67.1c-13 0-23-10-23-23s10-23 23-23h805.4L662.4 274.5c-21-21.1 11-53.1 32-32.1z"></path></svg>
+              </div>
+              <DatePicker
+                className="dr__datePicker"
+                selected={this.state.endDate}
+                selectsEnd
+                startDate={this.state.startDate}
+                endDate={this.state.endDate}
+                onChange={endDate => {
+	                self.setState({endDate});
+	                // self.onRangeChange({ endDate });
+	                console.log('end date 2 comp', endDate);
+                }}
+            /></div>)];
       case 'checkbox':
         let vals = [...decodeURIComponent(self.props.options.value)];
 
