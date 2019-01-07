@@ -6,6 +6,7 @@ import ListHeader from '../../components/ListHeader';
 import ListFooter from '../../components/ListFooter';
 import ListRow from '../../components/ListRow';
 import Pagination from '../../components/Pagination';
+import InfiniteScroller from '../../components/InfiniteScroller';
 
 class DataList extends Component { // eslint-disable-line react/prefer-stateless-function
   constructor(props) {
@@ -95,24 +96,24 @@ class DataList extends Component { // eslint-disable-line react/prefer-stateless
 
   render() {
     const { config, selectedView, Items = [], showLoading, width, preferences } = this.props;
-    const listItems = showLoading
+    const _listItems = showLoading
       ? selectedView.customContentPlaceholder ? this.makeContentPlaceholderLoading(selectedView.customContentPlaceholder, selectedView.customContentPlaceholderAmount) : this.makeLoading()
       : ((Items && Items.length > 0) ? this.makeDataList(Items, selectedView) : this.makeNoResults(selectedView.noResultsMessage)),
 
       classNames = config.pinPagination ? 'dl__dataList dl__pinPagination' : 'dl__dataList',
       listHeader = selectedView.showListHeader ? (<ListHeader selectedView={selectedView} item={Items[0]}> </ListHeader>) : '',
-      pagination = (Items && Items.length > 0) ? (<Pagination bottom={config.dataList.paginationBottomPosition}> </Pagination>) : '';
+      pagination = (Items && Items.length > 0) ? (<Pagination bottom={config.dataList.paginationBottomPosition}> </Pagination>) : '',
+      listItems = selectedView.enableInfiniteScroll ?  (<InfiniteScroller>{_listItems}</InfiniteScroller>) : _listItems;
 
     return (
       <div className={classNames} style={{ height: config.dataList.height, width }}>
-        {/* {listHeader} */}
-
         <div className="dl__dataListWrapper" style={{ overflowY: config.dataList.overflowY }}>
           <ul className="dl__dataList-list">
             {listHeader}
             {listItems}
           </ul>
         </div>
+        
         {pagination}
         <ListFooter> </ListFooter>
       </div>

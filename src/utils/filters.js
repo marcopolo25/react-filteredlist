@@ -39,7 +39,6 @@ function _render(xhrResponse,options,_state){
         switch(options.renderTo){
             case 'store':
             default:
-
                // EMit an event containing the data to be added to the store
                 // EVent is picked up in the App/index.js component constructor
                 var elem = document,

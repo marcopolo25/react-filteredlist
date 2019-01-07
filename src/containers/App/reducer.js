@@ -197,11 +197,26 @@ function appReducer(state = initialState, action) {
       return runStateUpdateHook(_state, action.type, action);
 
     case UPDATE_ITEMS:
-      _state.Items = _data.Items;
       _state.pagination.total = _data.count;
       _state.force = Math.random() * 10000000;
       _state.showLoading = false;
-
+      
+      if (_state.pagination.action) {
+        switch (_state.pagination.action) {
+          case 'prev':
+            _state.Items = _data.Items.concat(_state.Items);
+            break;
+          case 'next':
+            _state.Items = _state.Items.concat(_data.Items);
+            break;
+          default:
+            _state.Items = _data.Items;
+        }
+      }
+      else {
+        _state.Items = _data.Items;
+      }
+      
       return runStateUpdateHook(_state, action.type, action);
 
     case UPDATE_VIEW_PROPS:
@@ -413,6 +428,13 @@ function appReducer(state = initialState, action) {
           return view;
         })
       }
+	
+			// Broadcast the change event, Listeners: App/index.js _initPagination() & the redux store via dispatch
+			var elem = document,
+				event = elem.createEvent('Event');
+			event.initEvent('paginationChange', true, true);
+			event.data = _state.pagination;
+			document.dispatchEvent(event);
 
       return runStateUpdateHook(_state, action.type, action);
 

@@ -337,6 +337,8 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
 
       elem.addEventListener('paginationChange', function (e) {
         const event = e.data;
+        
+        console.log('pagination change listener: ', event);
 
         // Only run if we are filtering dataTable items & there are items in the queryObject
         if (event.id === `dl__items__${dataListConfig.id}`) {
@@ -400,7 +402,7 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
     return (
       <div>
         <Header> </Header>
-        <div className="dl__container" >
+        <div className="dl__container">
           {filtersToggle}
           {filters}
           <DataList Items={this.props.pushDispatch.Items || app.Items} width={width}> </DataList>

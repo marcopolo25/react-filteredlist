@@ -4960,6 +4960,10 @@ code {
     font-style: italic;
     opacity: 0.8; }
 
+.dl__infiniteScroller {
+  width: 100%;
+  height: 600px; }
+
 .dl {
   position: relative; }
   .dl__container {
