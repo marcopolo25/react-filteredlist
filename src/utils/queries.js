@@ -141,6 +141,20 @@ function getPaginationQueryParams() {
 }
 
 /**
+ * Gets the pagination query params from the url to preserve them on write
+ */
+function getExistingQueryParams() {
+	const params = _.omit(this.parseParms(window.location.href.split('?')[1]), ['skip', 'take', 'page', ""]);
+	let str = '';
+	
+	for (let key in params) {
+		str += `${key}=${params[key]}&`
+	}
+	
+	return str === '=&' ? '' : str.slice(0, -1);// removes the last ampersand
+}
+
+/**
  * Fetches the current view from the url
  * @returns {string}
  */
@@ -366,6 +380,7 @@ export default {
   readQueryStringFromURL,
   clearURLQueryString,
   getViewParamFromURL,
+	getExistingQueryParams,
   makeGraphQLRequest,
   makeXHRRequest,
   parseParms,

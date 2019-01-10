@@ -6,6 +6,8 @@ import {bindActionCreators} from "redux";
 import * as PaginationActions from "src/components/Pagination/actions";
 import {connect} from "react-redux";
 import _ from "underscore";
+import createHistory from 'history/createBrowserHistory';
+const history = createHistory();
 
 
 
@@ -36,10 +38,11 @@ class InfiniteScroller extends Component {
 			totalPages: 0,
 			pagination: props.pagination,
 			loadingTop: false,
-			loadingBottom: false
+			loadingBottom: false,
+			scrollTo: null
 		};
 		
-		this.handleOnReachUp = this.handleOnReachUp.bind(this);
+		this.handleOnReachTop = this.handleOnReachTop.bind(this);
 		this.handleOnReachBottom = this.handleOnReachBottom.bind(this);
 		this._runPagingComputation = this._runPagingComputation.bind(this);
 
@@ -80,12 +83,22 @@ class InfiniteScroller extends Component {
 	componentDidUpdate(props, state) {
 		const isEqual = _.isEqual(_.sortBy(this.state.listItems), _.sortBy(state.listItems));
 		if(!isEqual) {
-			// this._maintainPaginationScrollPosition();
 			this.setState({ loadingTop: false, loadingBottom: false })
 		}
+		if(props.action && props.action === 'next' && props.children) {
+			const scrollTo = this.makeScrollToPosition(props);
+			this.setState({ scrollTo })
+		}
+		
 	}
 	
 	
+	makeScrollToPosition(props) {
+		const { children } = props;
+		if(children && children.ref) {
+			console.log('children: ', children.ref.current.clientHeight)
+		}
+	}
 	
 	_runPagingComputation(){
 		const self = this;
@@ -126,8 +139,6 @@ class InfiniteScroller extends Component {
 		self.setState(params);
 	};
 	
-	_maintainPaginationScrollPosition() {
-	}
 	
 	makePaginationEvent(action) {
 		let page = 1;
@@ -156,7 +167,7 @@ class InfiniteScroller extends Component {
 		};
 	}
 	
-	handleOnReachUp() {
+	handleOnReachTop() {
 		// Exit scroll event if on the last page
 		if(this.state.currentTopPage > 1) {
 			if(!this.state.loadingTop) {
@@ -172,8 +183,10 @@ class InfiniteScroller extends Component {
 		if(this.state.currentBottomPage < this.state.totalPages) {
 			if(!this.state.loadingBottom) {
 				const event = this.makePaginationEvent('next');
-				this.sendEvent(event);
-				this.setState({loadingBottom: true, currentBottomPage: event.page});
+				console.log('event: ', event)
+				this.sendEvent(event)
+					.writeQueryStringToURL(`?skip=${event.skip}&take=${event.take}&page=${event.page}`)
+					.setState({loadingBottom: true, currentBottomPage: event.page});
 			}
 		}
 	}
@@ -184,6 +197,60 @@ class InfiniteScroller extends Component {
 		
 		// Dispatch the redux event before the DOM evt
 		updatePagination({ pagination: eventData });
+		
+		return this;
+	}
+	
+	// TODO: The 2 preceding methods needs to be moved to the queries utils for reuse. Be sure to update all references of these
+	// TODO: with the exported ones.
+	/**
+	 * Handles writing to the url if selected by config
+	 * @param queryString
+	 */
+	writeQueryStringToURL(queryString) {
+		const { pagination } = this.props,
+			self = this,
+			path = window.location.href.split('?')[0].split(window.location.host)[1];//@todo check if this works on production
+		
+		// The delay is import for handling what looks like a conflict with Meteor's iron-router
+		//@todo may be able to remove this from filterSort component not in a Meteor site
+		setTimeout(function () {
+			history.replace(path + queryString + '&' + self.getExistingQueryParams());
+		}, 1000);
+		
+		return this;
+	}
+	
+	/**
+	 * Gets the pagination query params from the url to preserve them on write
+	 */
+	getExistingQueryParams() {
+		const params = _.omit(this.parseParms(window.location.href.split('?')[1]), ['skip', 'take', 'page', ""]);
+		let str = '';
+		
+		for (let key in params) {
+			str += `${key}=${params[key]}&`
+		}
+		
+		return str === '=&' ? '' : str.slice(0, -1);// removes the last ampersand
+	}
+	
+	/**
+	 * From: http://stackoverflow.com/questions/23481979/function-to-convert-url-hash-parameters-into-object-key-value-pairs
+	 * @param str
+	 * @returns {{}}
+	 */
+	parseParms(str = '') {
+		var pieces = str.split("&"), data = {}, i, parts;
+		// process each query pair
+		for (i = 0; i < pieces.length; i++) {
+			parts = pieces[i].split("=");
+			if (parts.length < 2) {
+				parts.push("");
+			}
+			data[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+		}
+		return data;
 	}
 	
 	render() {
@@ -194,7 +261,7 @@ class InfiniteScroller extends Component {
 			<div className="dl__infiniteScroll">
 				<InfiniteScroll
 					onReachBottom={this.handleOnReachBottom}
-					onReachTop={this.handleOnReachUp}
+					onReachTop={this.handleOnReachTop}
 				>
 					{ loadingTop && <Loading/> }
 					{ children }

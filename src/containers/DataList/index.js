@@ -19,6 +19,7 @@ class DataList extends Component { // eslint-disable-line react/prefer-stateless
 
     this.makeLoading = this.makeLoading.bind(this);
     this.makeContentPlaceholderLoading = this.makeContentPlaceholderLoading.bind(this);
+    this.listItemsRef = React.createRef()
   }
 
   componentWillReceiveProps(nextprops) {
@@ -34,9 +35,13 @@ class DataList extends Component { // eslint-disable-line react/prefer-stateless
   }
 
   makeDataList(Items, selectedView) {
-    return (Items.map((item, i) => {
-      return (<ListRow key={i} item={item} items={Items} selectedView={selectedView} preferencedProps={selectedView.props}> </ListRow>);
-    }));
+    return <ul className="dl__dataList-list" ref={this.listItemsRef}>
+      {
+        Items.map((item, i) => {
+					return (<ListRow key={i} item={item} items={Items} selectedView={selectedView} preferencedProps={selectedView.props}> </ListRow>);
+				})
+			}
+    </ul>
   }
 
   makeNoResults(noResultsMessage) {
@@ -103,15 +108,13 @@ class DataList extends Component { // eslint-disable-line react/prefer-stateless
       classNames = config.pinPagination ? 'dl__dataList dl__pinPagination' : 'dl__dataList',
       listHeader = selectedView.showListHeader ? (<ListHeader selectedView={selectedView} item={Items[0]}> </ListHeader>) : '',
 			listItems = selectedView.enableInfiniteScroll ?  (<InfiniteScroller>{_listItems}</InfiniteScroller>) : _listItems,
-      pagination = (Items && Items.length > 0) ? (<Pagination bottom={config.dataList.paginationBottomPosition}> </Pagination>) : '';
+      pagination = !selectedView.enableInfiniteScroll ? ((Items && Items.length > 0) ? (<Pagination bottom={config.dataList.paginationBottomPosition}> </Pagination>) : '') : '';
 
     return (
       <div className={classNames} style={{ height: config.dataList.height, width }}>
         <div className="dl__dataListWrapper" style={{ overflowY: config.dataList.overflowY }}>
           {listHeader}
-          <ul className="dl__dataList-list">
-            {listItems}
-          </ul>
+          {listItems}
         </div>
         
         {pagination}
