@@ -120,7 +120,7 @@ class ListHeader extends Component { // eslint-disable-line react/prefer-statele
       : '';
 
     return (
-      <li className={classNames} style={{ ...selectedView.listHeaderStyles, gridTemplateColumns: listCssGridLayout }}>
+      <div className={classNames} style={{ ...selectedView.listHeaderStyles, gridTemplateColumns: listCssGridLayout }}>
         {check}
 
         {props.map(prop => {
@@ -137,7 +137,7 @@ class ListHeader extends Component { // eslint-disable-line react/prefer-statele
         {sortIcon}
         {columnSelector}
         {detachedSort}
-      </li>
+      </div>
     );
   }
 }

@@ -34,18 +34,16 @@
         //max-height: 700px;
    
     }
-
+    .dl__listGridContainer{
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(1fr, 1fr));
+    }
     &-list { //ul
         margin: 0;
         min-height: 500px;
-        padding-left: 6px;
         min-width: 550px;
         // overflow-y: visible;
 
-        .dl__listGridContainer{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(1fr, 1fr));
-        }
     }
 
     &--noResults,

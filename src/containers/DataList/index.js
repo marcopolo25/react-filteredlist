@@ -108,8 +108,8 @@ class DataList extends Component { // eslint-disable-line react/prefer-stateless
     return (
       <div className={classNames} style={{ height: config.dataList.height, width }}>
         <div className="dl__dataListWrapper" style={{ overflowY: config.dataList.overflowY }}>
+          {listHeader}
           <ul className="dl__dataList-list">
-            {listHeader}
             {listItems}
           </ul>
         </div>

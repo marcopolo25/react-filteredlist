@@ -5036,14 +5036,13 @@ code {
     height: auto;
     overflow-y: auto;
     z-index: 100; }
+  .dl__dataList .dl__listGridContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(1fr, 1fr)); }
   .dl__dataList-list {
     margin: 0;
     min-height: 500px;
-    padding-left: 6px;
     min-width: 550px; }
-    .dl__dataList-list .dl__listGridContainer {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(1fr, 1fr)); }
   .dl__dataList--noResults, .dl__dataList--loading {
     min-height: 100%;
     list-style-type: none; }
