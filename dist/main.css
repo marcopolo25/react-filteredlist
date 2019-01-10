@@ -305,7 +305,7 @@ code {
 .fa.pull-right {
   margin-left: .3em; }
 
-.fa-spin, .dl__pagination__loading:after, .dl__dataList--loading > div:after {
+.fa-spin, .dl__pagination__loading:after, .dl__infiniteScroll-loading > div:after, .dl__dataList--loading > div:after {
   -webkit-animation: fa-spin 2s infinite linear;
   animation: fa-spin 2s infinite linear; }
 
@@ -4971,9 +4971,44 @@ code {
     font-style: italic;
     opacity: 0.8; }
 
-.dl__infiniteScroller {
+.dl__infiniteScroll {
   width: 100%;
   height: 600px; }
+  .dl__infiniteScroll-loading {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    height: 35px;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 2px solid #ddd;
+    position: relative; }
+    .dl__infiniteScroll-loading h1 {
+      color: #4ab2cd;
+      font-size: 21px; }
+    .dl__infiniteScroll-loading > div {
+      position: relative;
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-left: 5px; }
+      .dl__infiniteScroll-loading > div:after {
+        content: "\F110";
+        position: absolute;
+        font-family: FontAwesome;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        left: auto;
+        width: 18px;
+        height: 18px;
+        font-size: 18px;
+        line-height: 20px;
+        color: #b3b3b3; }
+    .dl__infiniteScroll-loading.top {
+      border-bottom: 2px solid #ddd; }
+    .dl__infiniteScroll-loading.bottom {
+      border-top: 2px solid #ddd; }
 
 .dl {
   position: relative; }

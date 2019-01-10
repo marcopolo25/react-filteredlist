@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-bidirectional-infinite-scroll';
 import {bindActionCreators} from "redux";
@@ -14,8 +15,13 @@ import _ from "underscore";
 // Todo: Add loading icon on scroll up or down
 
 
-// Normal Pagination object
-// {skip: 125, take: 25, page: 6, id: "dl__items__assets"}
+const Loading = ({ loadingTop, loadingBottom}) => {
+	const classNames = ['dl__infiniteScroll-loading', `${loadingTop && 'top'}`, `${loadingBottom && 'bottom'}`].join(' ');
+	return <div className={classNames}>
+						<h3>Loading</h3>
+						<div></div>
+					</div>
+};
 
 class InfiniteScroller extends Component {
 	
@@ -23,6 +29,8 @@ class InfiniteScroller extends Component {
 		super(props)
 		
 		this.state = {
+			listItems: null,
+			clientHeight: null,
 			currentTopPage: 0,
 			currentBottomPage: 0,
 			totalPages: 0,
@@ -39,22 +47,56 @@ class InfiniteScroller extends Component {
 		document.addEventListener('renderToStore', self._runPagingComputation);
 	}
 	
+	componentDidMount() {
+		console.log(this.props.children.ref)
+		// this._runPagingComputation();
+		// this._maintainPaginationScrollPosition();
+	}
+	
 	// componentWillReceiveProps(nextProps) {
-	// 	console.log(this.props)
-	// 	if(this.props !== nextProps) {
-	// 		console.log('run pagination computation.');
-	// 		this._runPagingComputation();
+	// 	const isEqual = _.isEqual(_.sortBy(this.props.app.Items), _.sortBy(nextProps.app.Items));
+	// 	console.log(nextProps.children.ref)
+	// 	const { children } = nextProps, {ref} = children;
+	// 	if(ref) {
+	// 		console.log(ref.current);
 	// 	}
+	// 	// if(this.props.app.Items !== nextProps.app.Items) {
+	// 	// 	const { app } = nextProps;
+	// 	// 	console.log('app: ', app)
+	// 	//
+	// 	// }
 	// }
+	
+	static getDerivedStateFromProps(props, state) {
+		const {app} = props;
+		if(app.listItems !== state.listItems){
+			return {
+				listItems: app.Items
+			}
+		}
+		return null;
+	}
+	
+	componentDidUpdate(props, state) {
+		const isEqual = _.isEqual(_.sortBy(this.state.listItems), _.sortBy(state.listItems));
+		if(!isEqual) {
+			// this._maintainPaginationScrollPosition();
+			this.setState({ loadingTop: false, loadingBottom: false })
+		}
+	}
+	
+	
 	
 	_runPagingComputation(){
 		const self = this;
-		const { pagination } = self.props,
+		const { pagination } = self.props, { action } = pagination,
 			totalPages = Math.ceil(pagination.total / pagination.take);
-		let currentPage = 1;
+		let currentPage = 1,
+			params = {
+			pagination,
+			totalPages
+		};
 		
-		console.log('pagination: ', pagination);
-
 		// Make current page
 		if (isFinite(pagination.skip / pagination.take)) {
 			switch (Math.floor((pagination.skip / pagination.take))) {
@@ -70,17 +112,22 @@ class InfiniteScroller extends Component {
 			}
 		}
 
-		let params = {
-			pagination,
-			totalPages,
-			currentTopPage: currentPage,
-			currentBottomPage: currentPage,
-			loadingTop: false,
-			loadingBottom: false
-		};
+		
+		// Add the top and bottom page prop if pagination event
+		// was NOT fired from the infinite scroll event
+		if(!action) {
+			params = {
+				...params,
+				currentTopPage: currentPage,
+				currentBottomPage: currentPage
+			}
+		}
 		
 		self.setState(params);
 	};
+	
+	_maintainPaginationScrollPosition() {
+	}
 	
 	makePaginationEvent(action) {
 		let page = 1;
@@ -112,18 +159,22 @@ class InfiniteScroller extends Component {
 	handleOnReachUp() {
 		// Exit scroll event if on the last page
 		if(this.state.currentTopPage > 1) {
-			const event = this.makePaginationEvent('prev');
-			this.sendEvent(event);
-			this.setState({ loadingTop: true, currentTopPage: event.page });
+			if(!this.state.loadingTop) {
+				const event = this.makePaginationEvent('prev');
+				this.sendEvent(event);
+				this.setState({loadingTop: true, currentTopPage: event.page});
+			}
 		}
 	}
 	
 	handleOnReachBottom() {
 		// Exit scroll event if on the last page
 		if(this.state.currentBottomPage < this.state.totalPages) {
-			const event = this.makePaginationEvent('next');
-			this.sendEvent(event);
-			this.setState({ loadingBottom: true, currentBottomPage: event.page });
+			if(!this.state.loadingBottom) {
+				const event = this.makePaginationEvent('next');
+				this.sendEvent(event);
+				this.setState({loadingBottom: true, currentBottomPage: event.page});
+			}
 		}
 	}
 	
@@ -140,14 +191,14 @@ class InfiniteScroller extends Component {
 		const { loadingTop, loadingBottom } = this.state;
 		
 		return (
-			<div className="dl__infiniteScroller">
+			<div className="dl__infiniteScroll">
 				<InfiniteScroll
 					onReachBottom={this.handleOnReachBottom}
 					onReachTop={this.handleOnReachUp}
 				>
-					{/*{ loadingTop && <div className="dl__infiniteScroller-loading">Loading</div> }*/}
+					{ loadingTop && <Loading/> }
 					{ children }
-					{/*{ loadingBottom && <div className="dl__infiniteScroller-loading">Loading</div> }*/}
+					{ loadingBottom && <Loading/> }
 				</InfiniteScroll>
 			</div>
 		);
