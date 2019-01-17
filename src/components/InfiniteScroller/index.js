@@ -32,6 +32,7 @@ class InfiniteScroller extends Component {
 		
 		this.state = {
 			listItems: null,
+			scrollContainerHeight: null,
 			clientHeight: null,
 			currentTopPage: 0,
 			currentBottomPage: 0,
@@ -45,57 +46,66 @@ class InfiniteScroller extends Component {
 		this.handleOnReachTop = this.handleOnReachTop.bind(this);
 		this.handleOnReachBottom = this.handleOnReachBottom.bind(this);
 		this._runPagingComputation = this._runPagingComputation.bind(this);
+		this.scrollContainer = React.createRef();
 
 		const self = this;
 		document.addEventListener('renderToStore', self._runPagingComputation);
 	}
 	
-	componentDidMount() {
-		console.log(this.props.children.ref)
-		// this._runPagingComputation();
-		// this._maintainPaginationScrollPosition();
-	}
-	
-	// componentWillReceiveProps(nextProps) {
-	// 	const isEqual = _.isEqual(_.sortBy(this.props.app.Items), _.sortBy(nextProps.app.Items));
-	// 	console.log(nextProps.children.ref)
-	// 	const { children } = nextProps, {ref} = children;
-	// 	if(ref) {
-	// 		console.log(ref.current);
-	// 	}
-	// 	// if(this.props.app.Items !== nextProps.app.Items) {
-	// 	// 	const { app } = nextProps;
-	// 	// 	console.log('app: ', app)
-	// 	//
-	// 	// }
-	// }
-	
 	static getDerivedStateFromProps(props, state) {
-		const {app} = props;
+		const {app, children, pagination} = props;
+		let { scrollContainerHeight, clientHeight} = state;
+		
 		if(app.listItems !== state.listItems){
+			// Get clientHeight of dataList on filter or pagination events ONLY
+			// The initial clientHeight should not change on infinite scrolling
+			if(!scrollContainerHeight) {
+				if (pagination && !pagination.action) {
+					scrollContainerHeight = (children && children.ref && children.ref.current ? children.ref.current.clientHeight : null);
+				}
+			}
+			
+			clientHeight = (children && children.ref && children.ref.current ? children.ref.current.clientHeight : null);
+			
+			
+			
+			
 			return {
-				listItems: app.Items
+				listItems: app.Items,
+				scrollContainerHeight,
+				clientHeight
 			}
 		}
 		return null;
 	}
 	
 	componentDidUpdate(props, state) {
+		
+		const { children, pagination } = props;
+		
+		if(state.clientHeight) {
+			if(this.state.clientHeight !== state.clientHeight) {
+				const scrollToPos = Number(this.state.clientHeight) - Number(state.clientHeight);
+			}
+		}
+		
 		const isEqual = _.isEqual(_.sortBy(this.state.listItems), _.sortBy(state.listItems));
 		if(!isEqual) {
-			this.setState({ loadingTop: false, loadingBottom: false })
+			this.setState({ loadingTop: false, loadingBottom: false });
 		}
-		if(props.action && props.action === 'next' && props.children) {
-			const scrollTo = this.makeScrollToPosition(props);
-			this.setState({ scrollTo })
+		
+		if(pagination.action && pagination.action === 'prev'
+			&& props.children) {
+			// console.log('take all the heights: ', this.state.clientHeight, state.clientHeight)
+			// this.scrollContainer.current.scroller.scrollTop = 800;
 		}
 		
 	}
 	
-	
 	makeScrollToPosition(props) {
 		const { children } = props;
 		if(children && children.ref) {
+			console.log(props.children.ref.current.clientHeight)
 			console.log('children: ', children.ref.current.clientHeight)
 		}
 	}
@@ -172,8 +182,9 @@ class InfiniteScroller extends Component {
 		if(this.state.currentTopPage > 1) {
 			if(!this.state.loadingTop) {
 				const event = this.makePaginationEvent('prev');
-				this.sendEvent(event);
-				this.setState({loadingTop: true, currentTopPage: event.page});
+				this.sendEvent(event)
+					.writeQueryStringToURL(`?skip=${event.skip}&take=${event.take}&page=${event.page}`)
+					.setState({loadingTop: true, currentTopPage: event.page});
 			}
 		}
 	}
@@ -183,7 +194,6 @@ class InfiniteScroller extends Component {
 		if(this.state.currentBottomPage < this.state.totalPages) {
 			if(!this.state.loadingBottom) {
 				const event = this.makePaginationEvent('next');
-				console.log('event: ', event)
 				this.sendEvent(event)
 					.writeQueryStringToURL(`?skip=${event.skip}&take=${event.take}&page=${event.page}`)
 					.setState({loadingBottom: true, currentBottomPage: event.page});
@@ -255,13 +265,15 @@ class InfiniteScroller extends Component {
 	
 	render() {
 		const { children } = this.props;
-		const { loadingTop, loadingBottom } = this.state;
+		const { loadingTop, loadingBottom, scrollContainerHeight } = this.state;
 		
 		return (
-			<div className="dl__infiniteScroll">
+			<div className="dl__infiniteScroll" style={{ height: scrollContainerHeight}}>
 				<InfiniteScroll
 					onReachBottom={this.handleOnReachBottom}
 					onReachTop={this.handleOnReachTop}
+					position={50}
+					ref={this.scrollContainer}
 				>
 					{ loadingTop && <Loading/> }
 					{ children }
